@@ -430,7 +430,26 @@ html, body {
   .cb-card-body { padding: 10px 12px; font-size: 12px; }
 }
 
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#292929;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#6b6b6b;margin-bottom:18px;line-height:1.5}
+.modal-label{display:block;font-size:12px;font-weight:600;color:#292929;margin-bottom:5px}
+.modal-inp{width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:'Barlow',sans-serif;color:#292929;outline:none;margin-bottom:12px}
+.modal-inp:focus{border-color:#BB1E10}
+.modal-note{font-size:11px;color:#9a9a9a;margin-bottom:16px;line-height:1.5;background:#f7f6f4;padding:8px 10px;border-radius:6px;border-left:3px solid #BB1E10}
+.modal-btns{display:flex;gap:10px;flex-wrap:wrap}
+.modal-send{flex:2;padding:11px;border-radius:8px;border:none;background:#BB1E10;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px}
+.modal-send:hover{background:#8f1509}
+.modal-cancel{flex:1;padding:11px;border-radius:8px;border:1.5px solid #ddd;background:transparent;color:#6b6b6b;font-size:14px;font-weight:500;cursor:pointer;font-family:'Barlow',sans-serif}
+.modal-success{text-align:center;padding:10px 0}
+.modal-success-icon{font-size:48px;margin-bottom:10px}
+.modal-success-title{font-size:18px;font-weight:700;color:#1A7A3A;margin-bottom:6px}
+.modal-success-text{font-size:13px;color:#6b6b6b;line-height:1.5}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <noscript><div style="background:#BB1E10;color:#fff;padding:16px;text-align:center;font-family:sans-serif">Ce calculateur nécessite JavaScript. Veuillez activer JavaScript dans votre navigateur.</div></noscript>
@@ -508,7 +527,7 @@ html, body {
             </div>
             <div class="warn-ats" id="ats-warning">
               <i class="ti ti-alert-triangle"></i>
-              <span>Un ATS automatique doit être protégé contre les surtensions. Les cartes de contrôle et le mécanisme de transfert sont extrêmement vulnérables. Une protection Galéos Série 2 sera ajoutée à votre recommandation.</span>
+              <span>L'ATS est protégé en amont par la protection suggérée du panneau principal si dans la même salle électrique. Entre la génératrice et l'ATS, une protection doit être installée par une Galéos Série 2+ dans un splitter box. Cette protection sera ajoutée à votre recommandation.</span>
             </div>
           </div>
         </div>
@@ -924,16 +943,18 @@ document.addEventListener('DOMContentLoaded',function(){
     for(var i=0;i<equipList.length;i++) if(equipList[i].checked) totalEquip+=equipList[i].defaultVal;
 
     var ats=get('cb-ats'); var borne=get('cb-borne');
+    var genCard=document.getElementById('card-gen');
+    var genActive=(genCard&&genCard.classList.contains('active'));
     var nbBornes=parseInt((get('nb-bornes')||{value:'1'}).value,10)||1;
     var valVoiture=parseFloat((get('val-voiture')||{value:'50000'}).value)||0;
     var borneVal=(borne&&borne.checked)?(nbBornes*valVoiture):0;
     var totalBiens=totalEquip+borneVal;
-    var atsProt=(ats&&ats.checked);
+    var atsProt=(genActive && _atsMode==='auto');
     var riskFactor=calcRiskFactor();
     var risqueAnnuel=totalBiens*0.15*riskFactor/2;
     if(risqueAnnuel<500) risqueAnnuel=500;
     var totalSPD=panels.reduce(function(s,p){var k=getSeriesKey(p.tension,p.main,false,p.amps);if(!p.main&&p.dist!=='near')k=getSeriesKey(p.tension,false,false,p.amps);return s+SERIES[k].price;},0);
-    if(atsProt) totalSPD+=650+1295.95; // Série 2 (ATS) + Série 2+ (splitter)
+    if(atsProt) totalSPD+=1295.95; // Série 2+ splitter box seulement
     var retMois=totalSPD/risqueAnnuel*12;
     var eco5=Math.max(0,risqueAnnuel*5-totalSPD);
     var retStr=retMois<1?'< 1 mois':retMois<12?Math.round(retMois)+' mois':(retMois/12).toFixed(1)+' ans';
@@ -957,15 +978,13 @@ document.addEventListener('DOMContentLoaded',function(){
     if(atsProt){
       recoHTML+='<div class="rc" style="border-color:#1A7A3A">';
       recoHTML+='<div class="rch" style="background:#1A7A3A"><i class="ti ti-bolt"></i><div class="rcht">';
-      recoHTML+='<div class="rctag">Génératrice ATS automatique — 2 protections requises</div>';
-      recoHTML+='<div class="rcn">Série 2+ (splitter) + Série 2 (ATS)</div></div></div>';
+      recoHTML+='<div class="rctag">Génératrice ATS automatique — splitter box</div>';
+      recoHTML+='<div class="rcn">Série 2+ — splitter génératrice → ATS</div></div></div>';
       recoHTML+='<div class="rcb" style="background:#eaf3ee">';
-      recoHTML+='<div style="font-size:13px;color:#292929;margin-bottom:10px;line-height:1.5">L’ATS est dans la salle électrique principale. Le <strong>splitter box entre la génératrice et l’ATS</strong> est une sous-distribution distincte qui doit être protégée indépendamment (Série 2+). L’ATS lui-même est protégé par une Série 2.</div>';
-      recoHTML+='<div class="rcp" style="color:#1A7A3A"><i class="ti ti-tag"></i>&nbsp;Série 2+ — splitter box génératrice : <strong style="color:#1A7A3A">'+fmt(1295.95)+'</strong></div>';
-      recoHTML+='<div class="rcp" style="color:#1A7A3A;margin-top:4px"><i class="ti ti-tag"></i>&nbsp;Série 2 — protection ATS : <strong style="color:#1A7A3A">'+fmt(650)+'</strong></div>';
+      recoHTML+='<div style="font-size:13px;color:#292929;margin-bottom:10px;line-height:1.5">L\'ATS est protégé en amont par la Série 2 du panneau principal. Le splitter box entre la <strong>génératrice et l\'ATS</strong> est une sous-distribution distincte qui doit être protégée par une Série 2+.</div>';
+      recoHTML+='<div class="rcp" style="color:#1A7A3A"><i class="ti ti-tag"></i>&nbsp;Série 2+ — splitter box génératrice→ATS : <strong style="color:#1A7A3A">'+fmt(1295.95)+'</strong></div>';
       recoHTML+='</div></div>';
-      nameList.push('Série 2+ (splitter ATS)');
-      nameList.push('Série 2 (ATS)');
+      nameList.push('Série 2+ (splitter génératrice→ATS)');
     }
 
     var biensList='';
@@ -998,7 +1017,7 @@ document.addEventListener('DOMContentLoaded',function(){
       +'</div>'
       +'<div class="rfooter">'
       +'<button class="brst" id="breset"><i class="ti ti-refresh"></i> Recommencer</button>'
-      +'<a href="mailto:info@armadasurgeprotection.com" class="bctc"><i class="ti ti-mail"></i> Obtenir une soumission</a>'
+      +'<button class="bctc" onclick="telechargerPDF()" type="button"><i class="ti ti-download"></i> Télécharger mon analyse</button>'
       +'</div>'
       +'<div class="disc">* Les valeurs de risque sont des estimations bas\u00e9es sur les param\u00e8tres saisis et des statistiques de dommages par surtension en milieu r\u00e9sidentiel. Fourni \u00e0 titre indicatif. \u2014 Armada Surge Protection / 10551554 Canada Inc. \u2014 Gal\u00e9os Power Pressure\u2122, certifi\u00e9 UL1449/CSA. Garantie 25 ans.</div>';
 
@@ -1075,5 +1094,211 @@ document.addEventListener('DOMContentLoaded',function(){
 })();
 
 </script>
+
+<!-- Modal téléchargement -->
+<div class="modal-overlay" id="modal-soumission">
+  <div class="modal-box">
+    <div id="modal-form-view">
+      <div class="modal-title"><i class="ti ti-file-download" style="color:#BB1E10"></i> Télécharger votre analyse</div>
+      <div class="modal-sub">Un PDF de votre analyse sera généré. Vous pourrez ensuite l'envoyer à votre électricien ou distributeur, qui contactera Armada pour commander.</div>
+      <div class="modal-note"><i class="ti ti-info-circle"></i> Armada Surge Protection est manufacturier — les produits Galéos sont disponibles via votre électricien ou distributeur autorisé.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeSoumission()" type="button">Annuler</button>
+        <button class="modal-send" id="btn-generer" onclick="genererPDF()" type="button"><i class="ti ti-download"></i> Générer et télécharger le PDF</button>
+      </div>
+    </div>
+    <div id="modal-success-view" class="modal-success" style="display:none">
+      <div class="modal-success-icon">✅</div>
+      <div class="modal-success-title">PDF téléchargé !</div>
+      <div class="modal-success-text">Envoyez ce document à votre électricien ou distributeur. Il pourra contacter Armada Surge Protection pour commander les produits Galéos recommandés.<br><br><strong>info@armadasurgeprotection.com</strong></div>
+      <br>
+      <button class="modal-send" onclick="closeSoumission()" type="button" style="margin:0 auto;max-width:200px">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _pdfData = {};
+
+function telechargerPDF() {
+  _pdfData = collectResultsForPDF();
+  document.getElementById('modal-form-view').style.display = 'block';
+  document.getElementById('modal-success-view').style.display = 'none';
+  document.getElementById('modal-soumission').classList.add('show');
+}
+
+function closeSoumission() {
+  document.getElementById('modal-soumission').classList.remove('show');
+}
+
+function collectResultsForPDF() {
+  var data = {};
+  var kpis = document.querySelectorAll('.kv');
+  var klbls = document.querySelectorAll('.kl');
+  data.kpis = Array.from(kpis).map(function(k){ return k.textContent.trim(); });
+  data.klbls = Array.from(klbls).map(function(k){ return k.textContent.trim(); });
+  var recos = document.querySelectorAll('.rcn');
+  data.recos = Array.from(recos).map(function(r){ return r.textContent.trim(); });
+  var tags = document.querySelectorAll('.rctag');
+  data.tags = Array.from(tags).map(function(t){ return t.textContent.trim(); });
+  var prices = document.querySelectorAll('.rcp');
+  data.prices = Array.from(prices).map(function(p){ return p.textContent.trim(); });
+  var totEl = document.querySelector('.tv');
+  data.total = totEl ? totEl.textContent.trim() : '';
+  var tsEl = document.querySelector('.ts');
+  data.prodNames = tsEl ? tsEl.textContent.trim() : '';
+  return data;
+}
+
+function genererPDF() {
+  var btn = document.getElementById('btn-generer');
+  btn.innerHTML = '<i class="ti ti-loader"></i> Generation...';
+  btn.disabled = true;
+
+  setTimeout(function() {
+    try {
+      var doc = new window.jspdf.jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+      var W = 210, margin = 16, y = 0, lineH = 6;
+
+      function addText(text, x, size, style, color) {
+        doc.setFontSize(size || 10);
+        doc.setFont('helvetica', style || 'normal');
+        if(color) doc.setTextColor(color[0], color[1], color[2]);
+        else doc.setTextColor(41, 41, 41);
+        doc.text(text, x, y);
+      }
+
+      function nl(n) { y += (n || 1) * lineH; }
+      function line(r,g,b) {
+        doc.setDrawColor(r||220,g||220,b||220);
+        doc.line(margin, y, W-margin, y);
+        nl(0.8);
+      }
+
+      // ── HEADER ──
+      doc.setFillColor(187, 30, 16);
+      doc.rect(0, 0, W, 30, 'F');
+      y = 12;
+      addText('ARMADA', margin, 20, 'bold', [255,255,255]);
+      addText('Surge Protection', margin + 38, 10, 'normal', [255,200,200]);
+      addText('Analyse de risque — Protection contre surtensions', W-margin, 11, 'normal', [255,220,220]);
+      doc.setFontSize(11); doc.setTextColor(255,220,220);
+      doc.text('Analyse de risque — Protection contre surtensions', W-margin, y, {align:'right'});
+      y = 20;
+      doc.setFontSize(9); doc.setTextColor(255,200,200);
+      doc.text('Power Pressure™ | UL1449 & CSA | Garantie 25 ans | Granby, Quebec', W-margin, y, {align:'right'});
+      y = 36;
+
+      var d = _pdfData;
+
+      // ── DATE ──
+      var now = new Date();
+      var dateStr = now.toLocaleDateString('fr-CA', {year:'numeric',month:'long',day:'numeric'});
+      addText('Document genere le ' + dateStr, margin, 8, 'normal', [150,150,150]);
+      nl(1.5);
+      line();
+
+      // ── ANALYSE DE RISQUE ──
+      addText('ANALYSE DE RISQUE', margin, 9, 'bold', [187,30,16]);
+      nl(1.5);
+      doc.setFillColor(247, 246, 244);
+      doc.roundedRect(margin, y-4, W-2*margin, Math.min(d.kpis.length,4)*lineH+8, 3, 3, 'F');
+      nl(0.3);
+      for(var i=0; i<Math.min(d.kpis.length, d.klbls.length); i++) {
+        var lbl = d.klbls[i], val = d.kpis[i];
+        addText(lbl, margin+4, 10, 'normal', [107,107,107]);
+        doc.setFontSize(10); doc.setFont('helvetica','bold');
+        doc.setTextColor(i<2?187:26, i<2?30:122, i<2?16:58);
+        doc.text(val, W-margin-4, y, {align:'right'});
+        nl();
+      }
+      nl(0.5);
+      line();
+
+      // ── RECOMMANDATIONS ──
+      addText('PRODUITS RECOMMANDES', margin, 9, 'bold', [187,30,16]);
+      nl(1.5);
+
+      for(var j=0; j<d.recos.length; j++) {
+        // Card bg
+        doc.setFillColor(187, 30, 16);
+        doc.roundedRect(margin, y-4, W-2*margin, 8, 2, 2, 'F');
+        addText(d.tags[j] || '', margin+4, 7, 'normal', [255,200,200]);
+        nl();
+        doc.setFillColor(254, 242, 241);
+        var bodyH = d.prices[j] ? 12 : 8;
+        doc.roundedRect(margin, y-2, W-2*margin, bodyH, 0, 0, 'F');
+        addText(d.recos[j] || '', margin+4, 11, 'bold', [41,41,41]);
+        doc.setFontSize(11); doc.setFont('helvetica','bold');
+        doc.setTextColor(187,30,16);
+        if(d.prices[j]) doc.text(d.prices[j], W-margin-4, y, {align:'right'});
+        nl();
+        if(d.prices[j]) {
+          doc.setFontSize(9); doc.setFont('helvetica','normal');
+          doc.setTextColor(107,107,107);
+          nl(0.3);
+        }
+        nl(1.2);
+      }
+
+      // ── TOTAL ──
+      if(d.total) {
+        doc.setFillColor(41, 41, 41);
+        doc.roundedRect(margin, y-4, W-2*margin, 14, 3, 3, 'F');
+        addText('Investissement total en protection', margin+4, 10, 'normal', [180,180,180]);
+        doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+        doc.text(d.total, W-margin-4, y+4, {align:'right'});
+        nl(2.5);
+      }
+
+      line();
+      nl(0.5);
+
+      // ── NOTE ──
+      addText('Comment obtenir ces produits :', margin, 9, 'bold', [41,41,41]);
+      nl(1.2);
+      addText('Armada Surge Protection est manufacturier. Les produits Galeos sont disponibles', margin, 9, 'normal', [107,107,107]);
+      nl();
+      addText('via votre electricien ou distributeur autorise. Transmettez ce document a votre', margin, 9, 'normal', [107,107,107]);
+      nl();
+      addText('electricien — il contactera Armada pour commander.', margin, 9, 'normal', [107,107,107]);
+      nl(1.5);
+
+      // ── CONTACT ──
+      doc.setFillColor(247, 246, 244);
+      doc.roundedRect(margin, y-2, W-2*margin, 18, 3, 3, 'F');
+      addText('Armada Surge Protection — 10551554 Canada Inc.', margin+4, 9, 'bold', [41,41,41]);
+      nl();
+      addText('info@armadasurgeprotection.com  |  armadasurge.com  |  Granby, Quebec', margin+4, 8, 'normal', [107,107,107]);
+      nl();
+      doc.setTextColor(187,30,16); doc.setFontSize(8);
+      doc.text('Calculateur : https://armadawin.github.io/calculateur-armada/', margin+4, y);
+      nl(2);
+
+      // ── FOOTER ──
+      doc.setFillColor(187, 30, 16);
+      doc.rect(0, 282, W, 15, 'F');
+      doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(255,200,200);
+      doc.text('Galeos Power Pressure™ | Certifie UL1449 & CSA | Garantie 25 ans | Fabrique au Canada', W/2, 288, {align:'center'});
+      doc.text('* Estimations a titre indicatif basees sur les parametres saisis.', W/2, 293, {align:'center'});
+
+      doc.save('Analyse-Risque-Armada-Galeos.pdf');
+
+      document.getElementById('modal-form-view').style.display = 'none';
+      document.getElementById('modal-success-view').style.display = 'block';
+
+    } catch(err) {
+      btn.innerHTML = '<i class="ti ti-download"></i> Generer et telecharger le PDF';
+      btn.disabled = false;
+      alert('Erreur PDF: ' + err.message);
+    }
+  }, 100);
+}
+
+document.getElementById('modal-soumission').addEventListener('click', function(e) {
+  if(e.target === this) closeSoumission();
+});
+</script>
+
 </body>
 </html>
