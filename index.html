@@ -726,8 +726,8 @@ document.addEventListener('DOMContentLoaded',function(){
 
   function mkAmpSelect(pid, sel, tension) {
     var ampOpts = tension==='347600'
-      ? [100,200,400,600,800,1000,1200]
-      : [100,125,150,200];
+      ? [100,200,400,600,800,1000,1200,1600,2000,2400,3000]
+      : [100,125,150,200,225,320,400,600,800,1000,1200];
     var out = '<select class="inp" id="ta'+pid+'">';
     for (var i=0;i<ampOpts.length;i++) out+='<option value="'+ampOpts[i]+'"'+(ampOpts[i]===sel?' selected':'')+'>'+ampOpts[i]+'A</option>';
     return out+'</select>';
@@ -762,7 +762,7 @@ document.addEventListener('DOMContentLoaded',function(){
       out += '<div class="pbody'+(i===0?' open':'')+'" id="pb'+p.id+'">';
       out += '<div class="g3">';
       out += '<div><label class="fl" for="ts'+p.id+'"><b>Tension</b></label>'+mkTensionSelect(p.id, p.tension)+'</div>';
-      out += '<div><label class="fl" for="ta'+p.id+'"><b>Amp\u00e9rage</b></label>'+mkAmpSelect(p.id, p.amps, p.tension)+'</div>';
+      out += '<div><label class="fl" for="ta'+p.id+'"><b>Total ampérage de l&#39;entrée</b></label>'+mkAmpSelect(p.id, p.amps, p.tension)+'</div>';
       out += '<div><label class="fl" for="pn'+p.id+'"><b>Nom</b> <small>optionnel</small></label>';
       out += '<input class="inp" type="text" id="pn'+p.id+'" value="'+p.label+'" placeholder="Ex: Panneau sous-sol"></div>';
       out += '</div>';
