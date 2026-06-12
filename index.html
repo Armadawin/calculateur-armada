@@ -1174,7 +1174,7 @@ function genererPDF() {
       // HEADER
       doc.setFillColor(187, 30, 16);
       doc.rect(0, 0, W, 34, 'F');
-      try { doc.addImage(_ARMADA_LOGO, 'PNG', mg, 6, 48, 22); } catch(e) {}
+      try { doc.addImage(_ARMADA_LOGO, 'PNG', mg, 9, 52, 13); } catch(e) {}
       y = 11;
       doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
       doc.text('Analyse de risque', W-mg, y, {align: 'right'});
@@ -1201,7 +1201,7 @@ function genererPDF() {
       doc.setFillColor(247, 246, 244);
       doc.roundedRect(mg, y-3, W-2*mg, kn*lh+10, 3, 3, 'F');
       nl(0.8);
-      var CVAL = W - mg - 6;
+      var CVAL = W - mg - 20;
       for (var i = 0; i < kn; i++) {
         var lbl = (d.klbls[i]||'').trim();
         var val = (d.kpis[i]||'').trim();
