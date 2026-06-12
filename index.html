@@ -689,9 +689,9 @@ document.addEventListener('DOMContentLoaded',function(){
       desc:'Panneau principal 120/240V. Protection optimale pour entrée de service principale. Technologie Power Pressure, certifiée UL1449/CSA.' },
     's2p': { name:'Galeos Serie 2+',  tension:'120/240V', phases:'1 Phase',  maxAmps:1200, price:1295.95,
       desc:'Sous-distribution 120/240V au-delà de 10 mètres, splitter box génératrice/ATS, ou installation plus exigeante. Power Pressure certifiée UL1449/CSA.' },
-    '6xs': { name:'Galeos Serie 6xs', tension:'347/600V', phases:'3 Phases', maxAmps:600,  price:2500.00,
+    '6xs': { name:'Galeos Serie 6xs', tension:'347/600V', phases:'3 Phases', maxAmps:600,  price:0,
       desc:'Résidentiel lourd 347/600V avec branchement de source important. Max 600A. Nouveau produit par Armada 2026. Power Pressure brevetée.' },
-    '6':   { name:'Galeos Serie 6',   tension:'347/600V', phases:'3 Phases', maxAmps:null, price:3200.00,
+    '6':   { name:'Galeos Serie 6',   tension:'347/600V', phases:'3 Phases', maxAmps:null, price:5995.95,
       desc:'Installation 347/600V haute capacité (plus de 600A). Technologie Power Pressure brevetée, certifiée UL1449/CSA.' }
   };
 
@@ -974,7 +974,7 @@ document.addEventListener('DOMContentLoaded',function(){
       recoHTML+='<div class="rcn">'+s.name+' \u2014 '+s.tension+'</div>';
       if(isXs) recoHTML+='<div class="rc-new-badge">Nouveau 2026</div>';
       recoHTML+='</div></div>';
-      recoHTML+='<div class="rcb"><div class="rcp"><i class="ti ti-tag"></i>&nbsp;Prix client&nbsp;: <strong>'+fmt(s.price)+'</strong></div></div></div>';
+      recoHTML+='<div class="rcb"><div class="rcp"><i class="ti ti-tag"></i>&nbsp;Prix client&nbsp;: <strong>'+(s.price===0?'&Agrave; d&eacute;terminer':fmt(s.price))+'</strong></div></div></div>';
     });
     if(atsProt){
       recoHTML+='<div class="rc" style="border-color:#1A7A3A">';
@@ -1252,7 +1252,8 @@ function genererPDF() {
           if (prix) {
             nl(1.2);
             doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(187, 30, 16);
-            doc.text(prix, W/2, y+1, {align: 'center'});
+            var prixDisplay = (prix.indexOf('0') === 0 || prix === '0 $' || prix === '') ? 'Prix à déterminer' : prix;
+            doc.text(prixDisplay, W/2, y+1, {align: 'center'});
             nl(0.8);
           }
           nl(2);
