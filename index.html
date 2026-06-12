@@ -1270,7 +1270,7 @@ function genererPDF() {
         doc.text(d.total, W/2, y+11, {align: 'center'});
         nl(3.5);
       }
-      hr(); nl(0.5);
+      hr(); nl(0.3);
 
       // NOTE
       doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(41, 41, 41);
@@ -1283,7 +1283,7 @@ function genererPDF() {
       ];
       doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(107, 107, 107);
       for (var n = 0; n < noteLines.length; n++) { doc.text(noteLines[n], mg, y); nl(); }
-      nl(1);
+      nl(0.5);
 
       // CONTACT
       doc.setFillColor(247, 246, 244);
@@ -1291,7 +1291,7 @@ function genererPDF() {
       doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(41, 41, 41);
       doc.text('Armada Surge Protection', W/2, y+3, {align: 'center'});
       doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(107, 107, 107);
-      doc.text('info@armadasurgeprotection.com  |  armadasurge.com  |  Granby, Quebec', W/2, y+9, {align: 'center'});
+      doc.text('info@armadasurge.com  |  armadasurge.com  |  Granby, Quebec', W/2, y+9, {align: 'center'});
       doc.setFontSize(8); doc.setTextColor(187, 30, 16);
       doc.text('https://armadawin.github.io/calculateur-armada/', W/2, y+15, {align: 'center'});
       nl(4);
